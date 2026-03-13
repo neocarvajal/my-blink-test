@@ -1,0 +1,26 @@
+{
+  "address": "Eu6HDSN97Pu7o8SvRt2k6jJuYbDGRh85czL71cW8x8PB",
+  "metadata": {
+    "name": "solanatiers",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [],
+      "args": []
+    }
+  ]
+}
