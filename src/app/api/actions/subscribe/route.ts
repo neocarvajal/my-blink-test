@@ -20,7 +20,7 @@ const MI_WALLET_REFERIDO = "8H8nCS6JUhKNJRHbC2fmr6ofHRLsYCapqVmb5CJJ6VE6";
 const SHARED_HEADERS = {
   ...ACTIONS_CORS_HEADERS,
   "X-Action-Version": "1",
-  // "X-Blockchain-Ids": "solana:EtWTRmEVy1n97A8fUnS994N5T6v36S8a",
+  "X-Blockchain-Ids": "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
 };
 
 export const GET = async (req: Request) => {
