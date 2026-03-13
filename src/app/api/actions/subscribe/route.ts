@@ -92,9 +92,11 @@ export const POST = async (req: Request) => {
       PROGRAM_ID
     );
 
+    console.log("User Subscription PDA:", userSubscriptionPDA.toBase58());
+
     // 4. Construir Instrucción del Contrato
     const instruction = await program.methods
-      .subscribe(tier, subscriptionIndexBN)
+      .subscribe(new BN(tier), subscriptionIndexBN)
       .accounts({
         creatorConfig: creatorConfigPDA,
         userSubscription: userSubscriptionPDA,
