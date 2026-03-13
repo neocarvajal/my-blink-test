@@ -8,19 +8,507 @@
   },
   "instructions": [
     {
-      "name": "initialize",
+      "name": "cancel_subscription",
       "discriminator": [
-        175,
-        175,
-        109,
-        31,
-        13,
-        152,
-        155,
-        237
+        60,
+        139,
+        189,
+        242,
+        191,
+        208,
+        143,
+        18
       ],
-      "accounts": [],
+      "accounts": [
+        {
+          "name": "user_subscription",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "subscriber"
+              },
+              {
+                "kind": "account",
+                "path": "creator_config.authority",
+                "account": "CreatorConfig"
+              },
+              {
+                "kind": "arg",
+                "path": "subscription_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "subscriber",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "user_subscription"
+          ]
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "relations": [
+            "user_subscription"
+          ]
+        },
+        {
+          "name": "creator_config"
+        }
+      ],
+      "args": [
+        {
+          "name": "_subscription_index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "check_access",
+      "discriminator": [
+        74,
+        62,
+        42,
+        188,
+        96,
+        229,
+        63,
+        50
+      ],
+      "accounts": [
+        {
+          "name": "user_subscription"
+        }
+      ],
+      "args": [
+        {
+          "name": "required_tier",
+          "type": "u8"
+        }
+      ],
+      "returns": "bool"
+    },
+    {
+      "name": "delete_creator_config",
+      "discriminator": [
+        113,
+        140,
+        84,
+        82,
+        254,
+        129,
+        55,
+        187
+      ],
+      "accounts": [
+        {
+          "name": "creator_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  114,
+                  101,
+                  97,
+                  116,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "creator_config"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
       "args": []
+    },
+    {
+      "name": "initialize_creator",
+      "discriminator": [
+        29,
+        153,
+        44,
+        99,
+        52,
+        172,
+        81,
+        115
+      ],
+      "accounts": [
+        {
+          "name": "creator_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  114,
+                  101,
+                  97,
+                  116,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "tier_prices",
+          "type": {
+            "array": [
+              "u64",
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "subscribe",
+      "discriminator": [
+        254,
+        28,
+        191,
+        138,
+        156,
+        179,
+        183,
+        53
+      ],
+      "accounts": [
+        {
+          "name": "creator_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  114,
+                  101,
+                  97,
+                  116,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "creator_config.authority",
+                "account": "CreatorConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_subscription",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "subscriber"
+              },
+              {
+                "kind": "account",
+                "path": "creator_config.authority",
+                "account": "CreatorConfig"
+              },
+              {
+                "kind": "arg",
+                "path": "subscription_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "subscriber",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "creator",
+          "writable": true
+        },
+        {
+          "name": "referrer",
+          "docs": [
+            "Se valida en la lógica de la función si es necesario."
+          ],
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "tier",
+          "type": "u8"
+        },
+        {
+          "name": "subscription_index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "upgrade_tier",
+      "discriminator": [
+        122,
+        56,
+        170,
+        60,
+        252,
+        234,
+        190,
+        51
+      ],
+      "accounts": [
+        {
+          "name": "creator_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  114,
+                  101,
+                  97,
+                  116,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "creator_config.authority",
+                "account": "CreatorConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_subscription",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "subscriber"
+              },
+              {
+                "kind": "account",
+                "path": "creator_config.authority",
+                "account": "CreatorConfig"
+              },
+              {
+                "kind": "arg",
+                "path": "subscription_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "subscriber",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "user_subscription"
+          ]
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "relations": [
+            "user_subscription"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "new_tier",
+          "type": "u8"
+        },
+        {
+          "name": "_subscription_index",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "CreatorConfig",
+      "discriminator": [
+        208,
+        169,
+        98,
+        27,
+        194,
+        199,
+        95,
+        86
+      ]
+    },
+    {
+      "name": "UserSubscription",
+      "discriminator": [
+        108,
+        179,
+        18,
+        43,
+        167,
+        65,
+        185,
+        163
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidTier",
+      "msg": "Invalid tier selected"
+    },
+    {
+      "code": 6001,
+      "name": "NoActiveSubscription",
+      "msg": "No active subscription"
+    }
+  ],
+  "types": [
+    {
+      "name": "CreatorConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "tier_prices",
+            "type": {
+              "array": [
+                "u64",
+                4
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserSubscription",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "subscriber",
+            "type": "pubkey"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "referrer",
+            "type": "pubkey"
+          },
+          {
+            "name": "tier",
+            "type": "u8"
+          },
+          {
+            "name": "index",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
     }
   ]
 }

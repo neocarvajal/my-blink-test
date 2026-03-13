@@ -10,40 +10,40 @@ import {
   Connection, 
   PublicKey, 
   Transaction,
-  SystemProgram,
-  LAMPORTS_PER_SOL
+  SystemProgram
 } from "@solana/web3.js";
+import { Program, Idl, BN } from "@coral-xyz/anchor";
+import idl from "./solanatiers.json";
 
+type Solanatiers = Idl;
+const PROGRAM_ID = new PublicKey("Eu6HDSN97Pu7o8SvRt2k6jJuYbDGRh85czL71cW8x8PB");
 const MI_WALLET_CREADOR = "3gb1RurijBbsQLNfpV1xqosUZhPxX4PfvGjGtEAGp8gj";
 const MI_WALLET_REFERIDO = "8H8nCS6JUhKNJRHbC2fmr6ofHRLsYCapqVmb5CJJ6VE6";
 
 const SHARED_HEADERS = {
   ...ACTIONS_CORS_HEADERS,
   "X-Action-Version": "1",
-  "X-Blockchain-Ids": "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+  "X-Blockchain-Ids": "solana:EtWTRmEVy1n97A8fUnS994N5T6v36S8a",
 };
 
 export const GET = async (req: Request) => {
-  const { searchParams } = new URL(req.url);
-  const creatorName = searchParams.get("creator_name") || "Erick Developer";
-
   const payload: ActionGetResponse = {
     type: "action",
     icon: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png",
-    title: `Suscripción a ${creatorName}`,
-    description: `Apoya este proyecto en Devnet. Los fondos se enviarán a tu wallet configurada.`,
+    title: "SolanaTiers Protocol",
+    description: "Activa tu suscripción descentralizada. 90% para el creador, 10% para el referente.",
     label: "Suscribirse",
     links: {
       actions: [
         {
           type: "transaction",
-          label: "Tier Plata (0.01 SOL)",
-          href: `/api/actions/subscribe?amount=0.01&creator=${MI_WALLET_CREADOR}&ref=${MI_WALLET_REFERIDO}`,
+          label: "Tier 1 (Plata)",
+          href: `/api/actions/subscribe?tier=1&index=0&ref=${MI_WALLET_REFERIDO}`,
         },
         {
           type: "transaction",
-          label: "Tier Oro (0.05 SOL)",
-          href: `/api/actions/subscribe?amount=0.05&creator=${MI_WALLET_CREADOR}&ref=${MI_WALLET_REFERIDO}`,
+          label: "Tier 2 (Oro)",
+          href: `/api/actions/subscribe?tier=2&index=0&ref=${MI_WALLET_REFERIDO}`,
         }
       ]
     }
@@ -59,54 +59,74 @@ export const POST = async (req: Request) => {
     const { searchParams } = new URL(req.url);
     const body: ActionPostRequest = await req.json();
     
-    let subscriber: PublicKey;
-    try {
-      subscriber = new PublicKey(body.account);
-    } catch (err) {
-      return Response.json({ error: "Wallet del usuario inválida" }, { 
-        status: 400, 
-        headers: SHARED_HEADERS 
-      });
-    }
+    // Validar cuenta del suscriptor
+    const subscriber = new PublicKey(body.account);
+    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
-    const creatorAddress = searchParams.get("creator");
-    if (!creatorAddress) {
-      return Response.json({ error: "No se proporcionó wallet de destino" }, { 
-        status: 400, 
-        headers: SHARED_HEADERS 
-      });
-    }
-    const creator = new PublicKey(creatorAddress);
+    // Parámetros dinámicos desde la URL
+    const tier = parseInt(searchParams.get("tier") || "1");
+    const index = parseInt(searchParams.get("index") || "0");
+    const referrer = new PublicKey(searchParams.get("ref") || MI_WALLET_REFERIDO);
+    const creator = new PublicKey(MI_WALLET_CREADOR);
 
-    const connection = new Connection(clusterApiUrl("devnet"));
-    const amount = parseFloat(searchParams.get("amount") || "0.01");
+    // 2. Inicializar Programa de forma manual para Vercel
+    const program = new Program(idl as Solanatiers, { connection });
 
-    const transaction = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: subscriber,
-        toPubkey: creator,
-        lamports: amount * LAMPORTS_PER_SOL,
-      })
+    // 3. Cálculo de PDAs (Sincronizado con el código Rust)
+    
+    // b"creator" + creator_pubkey
+    const [creatorConfigPDA] = PublicKey.findProgramAddressSync(
+      [Buffer.from("creator"), creator.toBuffer()],
+      PROGRAM_ID
     );
 
+    // b"user" + subscriber + creator + index (u64 le)
+    const subscriptionIndexBN = new BN(index);
+    const [userSubscriptionPDA] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("user"),
+        subscriber.toBuffer(),
+        creator.toBuffer(),
+        subscriptionIndexBN.toArrayLike(Buffer, "le", 8)
+      ],
+      PROGRAM_ID
+    );
+
+    // 4. Construir Instrucción del Contrato
+    const instruction = await program.methods
+      .subscribe(tier, subscriptionIndexBN)
+      .accounts({
+        creatorConfig: creatorConfigPDA,
+        userSubscription: userSubscriptionPDA,
+        subscriber: subscriber,
+        creator: creator,
+        referrer: referrer,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction();
+
+    const transaction = new Transaction().add(instruction);
     transaction.feePayer = subscriber;
-    transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+    transaction.recentBlockhash = (await connection.getLatestBlockhash("confirmed")).blockhash;
 
     const payload: ActionPostResponse = await createPostResponse({
       fields: {
         type: "transaction",
         transaction,
-        message: `Enviando ${amount} SOL a ${creator.toBase58().slice(0, 4)}...`,
+        message: `Suscripción al Tier ${tier} en proceso...`,
       },
       options: {
-        commitment: "confirmed",
+        commitment: "confirmed"
       }
     });
 
     return Response.json(payload, { headers: SHARED_HEADERS });
 
-  } catch (err) {
-    return Response.json({ error: "Error interno al procesar la suscripción" }, { 
+  } catch (err: any) {
+    console.error("Error en SolanaTiers Blink:", err);
+    return Response.json({ 
+      error: "Error al interactuar con el contrato. ¿Está inicializado el creador?" 
+    }, { 
       status: 400, 
       headers: SHARED_HEADERS 
     });
