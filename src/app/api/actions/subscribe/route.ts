@@ -98,6 +98,9 @@ export const POST = async (req: Request) => {
         transaction,
         message: `Enviando ${amount} SOL a ${creator.toBase58().slice(0, 4)}...`,
       },
+      options: {
+        commitment: "confirmed",
+      }
     });
 
     return Response.json(payload, { headers: SHARED_HEADERS });
