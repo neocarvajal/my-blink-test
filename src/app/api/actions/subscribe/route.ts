@@ -19,6 +19,7 @@ type Solanatiers = Idl;
 const PROGRAM_ID = new PublicKey("Eu6HDSN97Pu7o8SvRt2k6jJuYbDGRh85czL71cW8x8PB");
 const MI_WALLET_CREADOR: PublicKey = new PublicKey("neoYtXTopQCbg2eWJhsT3uTTUJKCvnWwgC3NppJD1cS");
 const MI_WALLET_REFERIDO: PublicKey = new PublicKey("8H8nCS6JUhKNJRHbC2fmr6ofHRLsYCapqVmb5CJJ6VE6");
+const LOGO_URL = "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png";
 
 const SHARED_HEADERS = {
   ...ACTIONS_CORS_HEADERS,
@@ -27,9 +28,31 @@ const SHARED_HEADERS = {
 };
 
 export const GET = async (req: Request) => {
+  // --- INICIO BLOQUE METADATOS PARA TWITTER ---
+  if (!req.headers.get("x-action-version")) {
+    return new Response(
+      `<html>
+        <head>
+          <meta property="og:title" content="SolanaTiers Protocol" />
+          <meta property="og:description" content="Activa tu suscripción descentralizada. 90% para el creador, 10% para el referente." />
+          <meta property="og:image" content="${LOGO_URL}" />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content="SolanaTiers Protocol" />
+          <meta name="twitter:description" content="Activa tu suscripción descentralizada en Solana." />
+          <meta name="twitter:image" content="${LOGO_URL}" />
+        </head>
+        <body style="background-color: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh;">
+          Redirigiendo a SolanaTiers...
+        </body>
+      </html>`,
+      { headers: { "Content-Type": "text/html" } }
+    );
+  }
+  // --- FIN BLOQUE METADATOS ---
+
   const payload: ActionGetResponse = {
     type: "action",
-    icon: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png",
+    icon: LOGO_URL,
     title: "SolanaTiers Protocol",
     description: "Activa tu suscripción descentralizada. 90% para el creador, 10% para el referente.",
     label: "Suscribirse",
@@ -66,7 +89,7 @@ export const POST = async (req: Request) => {
     // Parámetros dinámicos desde la URL
     const tier = parseInt(searchParams.get("tier") || "1");
     const index = parseInt(searchParams.get("index") || "0");
-    const referrer = new PublicKey(searchParams.get("ref") || MI_WALLET_REFERIDO);
+    const referrer = new PublicKey(searchParams.get("ref") || MI_WALLET_REFERIDO.toBase58());
     const creator = MI_WALLET_CREADOR;
 
     // 2. Inicializar Programa de forma manual para Vercel
@@ -108,12 +131,6 @@ export const POST = async (req: Request) => {
       .instruction();
 
     const transaction = new Transaction();
-
-    // transaction.add(
-    //   ComputeBudgetProgram.setComputeUnitPrice({
-    //     microLamports: 1000,
-    //   })
-    // );
     
     transaction.add(instruction);
     transaction.feePayer = subscriber;
@@ -125,9 +142,6 @@ export const POST = async (req: Request) => {
         transaction,
         message: `Suscripción al Tier ${tier} en proceso...`,
       },
-      // options: {
-      //   commitment: "confirmed"
-      // }
     });
 
     return Response.json(payload, { headers: SHARED_HEADERS });
