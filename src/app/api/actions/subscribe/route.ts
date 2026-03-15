@@ -20,6 +20,8 @@ const PROGRAM_ID = new PublicKey("4NQ9RtQ3EYENFzb8qRN6ya3uYCmABKMNjgYfghBRWP4K")
 const MI_WALLET_CREADOR = new PublicKey("neoYtXTopQCbg2eWJhsT3uTTUJKCvnWwgC3NppJD1cS");
 const MI_WALLET_REFERIDO = new PublicKey("8H8nCS6JUhKNJRHbC2fmr6ofHRLsYCapqVmb5CJJ6VE6");
 const BANNER_URL = "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png"; 
+const GIFT_URL = "https://i.imgur.com/jac5q3i.gif"
+
 
 const SHARED_HEADERS = {
   ...ACTIONS_CORS_HEADERS,
@@ -39,7 +41,7 @@ export const GET = async (req: Request) => {
 
   const payload: ActionGetResponse = {
     type: "action",
-    icon: BANNER_URL,
+    icon: GIFT_URL,
     title: "SolanaTiers Protocol",
     description: "Support your favorite creators. Upgrade anytime by paying only the difference!",
     label: "Subscribe",
