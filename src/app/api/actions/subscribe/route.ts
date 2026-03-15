@@ -17,7 +17,7 @@ import idl from "./solanatiers.json";
 
 type Solanatiers = Idl;
 const PROGRAM_ID = new PublicKey("Eu6HDSN97Pu7o8SvRt2k6jJuYbDGRh85czL71cW8x8PB");
-const MI_WALLET_CREADOR = "3gb1RurijBbsQLNfpV1xqosUZhPxX4PfvGjGtEAGp8gj";
+const MI_WALLET_CREADOR = "neoYtXTopQCbg2eWJhsT3uTTUJKCvnWwgC3NppJD1cS";
 const MI_WALLET_REFERIDO = "8H8nCS6JUhKNJRHbC2fmr6ofHRLsYCapqVmb5CJJ6VE6";
 
 const SHARED_HEADERS = {
