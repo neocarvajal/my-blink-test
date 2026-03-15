@@ -23,11 +23,20 @@ const BANNER_URL = "https://raw.githubusercontent.com/solana-labs/token-list/mai
 
 const SHARED_HEADERS = {
   ...ACTIONS_CORS_HEADERS,
-  "X-Action-Version": "1",
+  "X-Action-Version": "2.1",
   "X-Blockchain-Ids": "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+  "Access-Control-Expose-Headers": "X-Action-Version, X-Blockchain-Ids"
 };
 
 export const GET = async (req: Request) => {
+
+  const requestUrl = new URL(req.url);
+ 
+  const baseHref = new URL(
+    "/api/actions/subscribe",
+    requestUrl.origin
+  ).toString();
+
   const payload: ActionGetResponse = {
     type: "action",
     icon: BANNER_URL,
@@ -39,22 +48,22 @@ export const GET = async (req: Request) => {
         { 
           type: "transaction",
           label: "Tier 1: Starter", 
-          href: `/api/actions/subscribe?tier=1&index=0` 
+          href: `${baseHref}?tier=1&index=0` 
         },
         { 
           type: "transaction",
           label: "Tier 2: Pro", 
-          href: `/api/actions/subscribe?tier=2&index=0` 
+          href: `${baseHref}?tier=2&index=0` 
         },
         { 
           type: "transaction",
           label: "Tier 3: Elite", 
-          href: `/api/actions/subscribe?tier=3&index=0` 
+          href: `${baseHref}?tier=3&index=0` 
         },
         { 
           type: "transaction",
           label: "Tier 4: VIP", 
-          href: `/api/actions/subscribe?tier=4&index=0` 
+          href: `${baseHref}?tier=4&index=0` 
         }
       ]
     }
