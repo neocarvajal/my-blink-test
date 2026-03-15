@@ -1,7 +1,8 @@
-import { ACTIONS_CORS_HEADERS } from "@solana/actions";
+import { createActionHeaders, type ActionsJson } from "@solana/actions";
 
 export const GET = async () => {
-  const payload = {
+
+  const payload: ActionsJson  = {
     rules: [
       {
         pathPattern: "/*",
@@ -11,7 +12,7 @@ export const GET = async () => {
   };
 
   return Response.json(payload, {
-    headers: ACTIONS_CORS_HEADERS
+    headers: createActionHeaders()
   });
 };
 
