@@ -109,11 +109,11 @@ export const POST = async (req: Request) => {
 
     const transaction = new Transaction();
 
-    transaction.add(
-      ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: 1000,
-      })
-    );
+    // transaction.add(
+    //   ComputeBudgetProgram.setComputeUnitPrice({
+    //     microLamports: 1000,
+    //   })
+    // );
     
     transaction.add(instruction);
     transaction.feePayer = subscriber;
