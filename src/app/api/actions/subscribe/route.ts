@@ -28,6 +28,32 @@ const SHARED_HEADERS = {
 };
 
 export const GET = async (req: Request) => {
+
+  if (!req.headers.get("x-action-version")) {
+    return new Response(
+      `<!DOCTYPE html>
+      <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <title>SolanaTiers Protocol</title>
+          <meta name="description" content="Activa tu suscripción descentralizada. 90% para el creador, 10% para el referente.">
+          
+          <meta property="og:type" content="website">
+          <meta property="og:url" content="https://my-blink-test.vercel.app/">
+          <meta property="og:title" content="SolanaTiers Protocol">
+          <meta property="og:description" content="Suscripciones Web3 directamente en tu feed.">
+          <meta property="og:image" content="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png">
+
+          <meta name="twitter:card" content="summary_large_image">
+          <meta name="twitter:title" content="SolanaTiers Protocol">
+          <meta name="twitter:description" content="Activa tu suscripción descentralizada en Solana.">
+          <meta name="twitter:image" content="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png">
+        </head>
+        <body style="background:#000; color:#fff;">Redirigiendo...</body>
+      </html>`,
+      { headers: { "Content-Type": "text/html" } }
+    );
+  }
  
   const payload: ActionGetResponse = {
     type: "action",
