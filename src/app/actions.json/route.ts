@@ -1,19 +1,21 @@
-import { createActionHeaders, type ActionsJson } from "@solana/actions";
+import { ACTIONS_CORS_HEADERS } from "@solana/actions";
 
 export const GET = async () => {
-  const payload: ActionsJson = {
+  const payload = {
     rules: [
-      // Esta regla le dice a Dial.to: 
-      // "Cualquier petición a la raíz, mándala a mi API de suscripción"
       {
         pathPattern: "/",
         apiPath: "/api/actions/subscribe",
       },
+      {
+        pathPattern: "/**",
+        apiPath: "/api/actions/subscribe",
+      }
     ],
   };
 
   return Response.json(payload, {
-    headers: createActionHeaders(),
+    headers: ACTIONS_CORS_HEADERS,
   });
 };
 
