@@ -28,33 +28,29 @@ const SHARED_HEADERS = {
 };
 
 export const GET = async (req: Request) => {
-  try {
-    const payload: ActionGetResponse = {
-      type: "action",
-      icon: LOGO_URL,
-      title: "SolanaTiers Protocol",
-      description: "Suscríbete para apoyar al creador. Si ya eres miembro, puedes mejorar tu nivel pagando solo la diferencia.",
-      label: "Suscribirse",
-      links: {
-        actions: [
-          {
-            type: "transaction",
-            label: "Tier 1 (Plata)",
-            href: `/api/actions/subscribe?tier=1&index=0&ref=${MI_WALLET_REFERIDO.toBase58()}`,
-          },
-          {
-            type: "transaction",
-            label: "Tier 2 (Oro)",
-            href: `/api/actions/subscribe?tier=2&index=0&ref=${MI_WALLET_REFERIDO.toBase58()}`,
-          }
-        ]
-      }
-    };
+  const payload: ActionGetResponse = {
+    type: "action",
+    icon: LOGO_URL,
+    title: "SolanaTiers Protocol",
+    description: "Únete a la comunidad. Si ya eres miembro, mejora tu nivel pagando solo la diferencia.",
+    label: "Suscribirse",
+    links: {
+      actions: [
+        {
+          type: "transaction",
+          label: "Tier 1 (Plata)",
+          href: `/api/actions/subscribe?tier=1&index=0&ref=${MI_WALLET_REFERIDO.toBase58()}`,
+        },
+        {
+          type: "transaction",
+          label: "Tier 2 (Oro)",
+          href: `/api/actions/subscribe?tier=2&index=0&ref=${MI_WALLET_REFERIDO.toBase58()}`,
+        }
+      ]
+    }
+  };
 
-    return Response.json(payload, { headers: SHARED_HEADERS });
-  } catch (err) {
-    return Response.json({ error: "Error loading action" }, { status: 500, headers: SHARED_HEADERS });
-  }
+  return Response.json(payload, { headers: SHARED_HEADERS });
 };
 
 export const OPTIONS = GET;
@@ -70,8 +66,7 @@ export const POST = async (req: Request) => {
 
     const tier = parseInt(searchParams.get("tier") || "1");
     const index = parseInt(searchParams.get("index") || "0");
-    const referrerStr = searchParams.get("ref") || MI_WALLET_REFERIDO.toBase58();
-    const referrer = new PublicKey(referrerStr);
+    const referrer = new PublicKey(searchParams.get("ref") || MI_WALLET_REFERIDO.toBase58());
     const subscriptionIndexBN = new BN(index);
 
     const [creatorConfigPDA] = PublicKey.findProgramAddressSync(
@@ -105,13 +100,19 @@ export const POST = async (req: Request) => {
           systemProgram: SystemProgram.programId,
         })
         .instruction();
-      message = `Activando suscripción Tier ${tier}...`;
+      message = `¡Bienvenido! Activando Tier ${tier}...`;
     } else {
-      const currentState: any = await (program.account as any ).userSubscription.fetch(userSubscriptionPDA);
+      const currentState: any = await (program.account as any).userSubscription.fetch(userSubscriptionPDA);
       
-      if (currentState.tier >= tier) {
+      if (currentState.tier === tier) {
         return Response.json({ 
-          error: `Ya posees el Tier ${currentState.tier} o uno superior.` 
+          error: `Ya tienes el Tier ${tier} activo.` 
+        }, { status: 400, headers: SHARED_HEADERS });
+      }
+
+      if (currentState.tier > tier) {
+        return Response.json({ 
+          error: `Ya tienes un nivel superior (Tier ${currentState.tier}).` 
         }, { status: 400, headers: SHARED_HEADERS });
       }
 
@@ -125,7 +126,7 @@ export const POST = async (req: Request) => {
           systemProgram: SystemProgram.programId,
         })
         .instruction();
-      message = `Mejorando nivel al Tier ${tier}...`;
+      message = `Mejorando de Tier ${currentState.tier} a Tier ${tier}...`;
     }
 
     const transaction = new Transaction().add(instruction);
@@ -143,9 +144,9 @@ export const POST = async (req: Request) => {
     return Response.json(payload, { headers: SHARED_HEADERS });
 
   } catch (err: any) {
-    console.error("Error en POST:", err);
+    console.error(err);
     return Response.json({ 
-      error: "Error al procesar la transacción." 
+      error: "Error al procesar la suscripción. Revisa tu saldo o nivel actual." 
     }, { 
       status: 400, 
       headers: SHARED_HEADERS 
