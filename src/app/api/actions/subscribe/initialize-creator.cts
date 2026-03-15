@@ -3,36 +3,31 @@ const { Program, BN, Wallet, AnchorProvider } = anchor;
 import { PublicKey, Connection, clusterApiUrl, Keypair } from "@solana/web3.js";
 import fs from "fs";
 
+const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+
+const idlData = fs.readFileSync("./solanatiers.json", "utf8");
+const idl = JSON.parse(idlData);
+
+const walletPath = process.env.HOME + "/.config/solana/id.json";
+
+const secretKey = Uint8Array.from(JSON.parse(fs.readFileSync(walletPath, "utf-8")));
+const keypair = Keypair.fromSecretKey(secretKey);
+const wallet = new Wallet(keypair);
+
+const provider = new AnchorProvider(connection, wallet, {
+    commitment: "confirmed",
+});
+
+const PROGRAM_ID = new PublicKey("4NQ9RtQ3EYENFzb8qRN6ya3uYCmABKMNjgYfghBRWP4K");
+const program = new Program(idl, provider);
+
 async function initialize_creator() {
 
-    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
-    
-    const idlData = fs.readFileSync("./solanatiers.json", "utf8");
-    const idl = JSON.parse(idlData);
-    
-    const walletPath = process.env.HOME + "/.config/solana/id.json";
-    
-    if (!fs.existsSync(walletPath)) {
-        console.error("❌ No se encontró tu llave privada en:", walletPath);
-        return;
-    }
-    
-    const secretKey = Uint8Array.from(JSON.parse(fs.readFileSync(walletPath, "utf-8")));
-    const keypair = Keypair.fromSecretKey(secretKey);
-    const wallet = new Wallet(keypair);
-
-    const provider = new AnchorProvider(connection, wallet, {
-        commitment: "confirmed",
-    });
-
-    const PROGRAM_ID = new PublicKey("Eu6HDSN97Pu7o8SvRt2k6jJuYbDGRh85czL71cW8x8PB");
-    const program = new Program(idl, provider);
-
     const tierPrices = [
-        new BN(0),                      
-        new BN(0.01 * 10 ** 9),         
-        new BN(0.05 * 10 ** 9),         
-        new BN(0.10 * 10 ** 9),         
+        new BN("10000000"),
+        new BN("50000000"),
+        new BN("100000000"),
+        new BN("200000000"),    
     ];
 
     const [creatorConfigPDA] = PublicKey.findProgramAddressSync(
@@ -66,25 +61,8 @@ async function initialize_creator() {
 }
 
 async function get_creator() {
-    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
-    const idlData = fs.readFileSync("./solanatiers.json", "utf8");
-    const idl = JSON.parse(idlData);
-    
-    const walletPath = process.env.HOME + "/.config/solana/id.json";
-
-    const secretKey = Uint8Array.from(JSON.parse(fs.readFileSync(walletPath, "utf-8")));
-    const keypair = Keypair.fromSecretKey(secretKey);
-    const wallet = new Wallet(keypair);
-
-    const provider = new AnchorProvider(connection, wallet, {
-        commitment: "confirmed",
-    });
-
-    const PROGRAM_ID = new PublicKey("Eu6HDSN97Pu7o8SvRt2k6jJuYbDGRh85czL71cW8x8PB");
-    const program = new Program(idl, provider);
-
-     const [creatorConfigPDA] = PublicKey.findProgramAddressSync(
+    const [creatorConfigPDA] = PublicKey.findProgramAddressSync(
         [Buffer.from("creator"), keypair.publicKey.toBuffer()],
         PROGRAM_ID
     );
@@ -112,6 +90,34 @@ async function get_creator() {
     }
 }
 
+async function delete_creator() {
+
+    const [creatorConfigPDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from("creator"), keypair.publicKey.toBuffer()],
+        PROGRAM_ID
+    );
+
+    try {
+        const tx = await program.methods
+        .deleteCreatorConfig()
+        .accounts({
+            creatorConfig: creatorConfigPDA,
+            authority: keypair.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .rpc();
+
+        console.log("\n✅ ¡Cuenta de Creador eliminada!");
+        console.log("Firma:", tx);
+
+    } catch (err) {
+        console.error("\n❌ La cuenta no existe o no pudo ser leída.");
+        console.log("Asegúrate de haber corrido el script de inicialización primero.");
+    }
+}
+
 // initialize_creator();
 
 get_creator();
+
+// delete_creator();
