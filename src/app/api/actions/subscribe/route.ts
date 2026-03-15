@@ -107,7 +107,15 @@ export const POST = async (req: Request) => {
       })
       .instruction();
 
-    const transaction = new Transaction().add(instruction);
+    const transaction = new Transaction();
+
+    transaction.add(
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: 1000,
+      })
+    );
+    
+    transaction.add(instruction);
     transaction.feePayer = subscriber;
     transaction.recentBlockhash = (await connection.getLatestBlockhash("confirmed")).blockhash;
 
@@ -117,9 +125,9 @@ export const POST = async (req: Request) => {
         transaction,
         message: `Suscripción al Tier ${tier} en proceso...`,
       },
-      options: {
-        commitment: "confirmed"
-      }
+      // options: {
+      //   commitment: "confirmed"
+      // }
     });
 
     return Response.json(payload, { headers: SHARED_HEADERS });
