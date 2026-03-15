@@ -17,8 +17,8 @@ import idl from "./solanatiers.json";
 
 type Solanatiers = Idl;
 const PROGRAM_ID = new PublicKey("Eu6HDSN97Pu7o8SvRt2k6jJuYbDGRh85czL71cW8x8PB");
-const MI_WALLET_CREADOR = "neoYtXTopQCbg2eWJhsT3uTTUJKCvnWwgC3NppJD1cS";
-const MI_WALLET_REFERIDO = "8H8nCS6JUhKNJRHbC2fmr6ofHRLsYCapqVmb5CJJ6VE6";
+const MI_WALLET_CREADOR: PublicKey = new PublicKey("neoYtXTopQCbg2eWJhsT3uTTUJKCvnWwgC3NppJD1cS");
+const MI_WALLET_REFERIDO: PublicKey = new PublicKey("8H8nCS6JUhKNJRHbC2fmr6ofHRLsYCapqVmb5CJJ6VE6");
 
 const SHARED_HEADERS = {
   ...ACTIONS_CORS_HEADERS,
@@ -67,7 +67,7 @@ export const POST = async (req: Request) => {
     const tier = parseInt(searchParams.get("tier") || "1");
     const index = parseInt(searchParams.get("index") || "0");
     const referrer = new PublicKey(searchParams.get("ref") || MI_WALLET_REFERIDO);
-    const creator = new PublicKey(MI_WALLET_CREADOR);
+    const creator = MI_WALLET_CREADOR;
 
     // 2. Inicializar Programa de forma manual para Vercel
     const program = new Program(idl as Solanatiers, { connection });
