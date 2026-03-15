@@ -17,9 +17,9 @@ import idl from "./solanatiers.json";
 
 type Solanatiers = Idl;
 const PROGRAM_ID = new PublicKey("Eu6HDSN97Pu7o8SvRt2k6jJuYbDGRh85czL71cW8x8PB");
-const MI_WALLET_CREADOR: PublicKey = new PublicKey("neoYtXTopQCbg2eWJhsT3uTTUJKCvnWwgC3NppJD1cS");
-const MI_WALLET_REFERIDO: PublicKey = new PublicKey("8H8nCS6JUhKNJRHbC2fmr6ofHRLsYCapqVmb5CJJ6VE6");
-const LOGO_URL = new URL("https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png").toString();
+const MI_WALLET_CREADOR = new PublicKey("neoYtXTopQCbg2eWJhsT3uTTUJKCvnWwgC3NppJD1cS");
+const MI_WALLET_REFERIDO = new PublicKey("8H8nCS6JUhKNJRHbC2fmr6ofHRLsYCapqVmb5CJJ6VE6");
+const LOGO_URL = "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png";
 
 const SHARED_HEADERS = {
   ...ACTIONS_CORS_HEADERS,
@@ -28,7 +28,6 @@ const SHARED_HEADERS = {
 };
 
 export const GET = async (req: Request) => {
-
   if (!req.headers.get("x-action-version")) {
     return new Response(
       `<!DOCTYPE html>
@@ -36,30 +35,26 @@ export const GET = async (req: Request) => {
         <head>
           <meta charset="UTF-8">
           <title>SolanaTiers Protocol</title>
-          <meta name="description" content="Activa tu suscripción descentralizada. 90% para el creador, 10% para el referente.">
-          
           <meta property="og:type" content="website">
-          <meta property="og:url" content="https://my-blink-test.vercel.app/">
           <meta property="og:title" content="SolanaTiers Protocol">
-          <meta property="og:description" content="Suscripciones Web3 directamente en tu feed.">
-          <meta property="og:image" content="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png">
-
+          <meta property="og:description" content="Suscripciones descentralizadas con sistema de referidos en Solana.">
+          <meta property="og:image" content="${LOGO_URL}">
           <meta name="twitter:card" content="summary_large_image">
-          <meta name="twitter:title" content="SolanaTiers Protocol">
-          <meta name="twitter:description" content="Activa tu suscripción descentralizada en Solana.">
-          <meta name="twitter:image" content="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png">
+          <meta name="twitter:image" content="${LOGO_URL}">
         </head>
-        <body style="background:#000; color:#fff;">Redirigiendo...</body>
+        <body style="background:#000; color:#fff; display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif;">
+          Redirigiendo a SolanaTiers...
+        </body>
       </html>`,
       { headers: { "Content-Type": "text/html" } }
     );
   }
- 
+
   const payload: ActionGetResponse = {
     type: "action",
     icon: LOGO_URL,
     title: "SolanaTiers Protocol",
-    description: "Activa tu suscripción descentralizada. 90% para el creador, 10% para el referente.",
+    description: "Suscríbete para apoyar al creador. Si ya eres miembro, puedes mejorar tu nivel pagando solo la diferencia.",
     label: "Suscribirse",
     links: {
       actions: [
@@ -87,57 +82,70 @@ export const POST = async (req: Request) => {
     const { searchParams } = new URL(req.url);
     const body: ActionPostRequest = await req.json();
     
-    // Validar cuenta del suscriptor
     const subscriber = new PublicKey(body.account);
     const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+    const program = new Program(idl as Solanatiers, { connection });
 
-    // Parámetros dinámicos desde la URL
     const tier = parseInt(searchParams.get("tier") || "1");
     const index = parseInt(searchParams.get("index") || "0");
     const referrer = new PublicKey(searchParams.get("ref") || MI_WALLET_REFERIDO.toBase58());
-    const creator = MI_WALLET_CREADOR;
+    const subscriptionIndexBN = new BN(index);
 
-    // 2. Inicializar Programa de forma manual para Vercel
-    const program = new Program(idl as Solanatiers, { connection });
-
-    // 3. Cálculo de PDAs (Sincronizado con el código Rust)
-    
-    // b"creator" + creator_pubkey
     const [creatorConfigPDA] = PublicKey.findProgramAddressSync(
-      [Buffer.from("creator"), creator.toBuffer()],
+      [Buffer.from("creator"), MI_WALLET_CREADOR.toBuffer()],
       PROGRAM_ID
     );
 
-    // b"user" + subscriber + creator + index (u64 le)
-    const subscriptionIndexBN = new BN(index);
     const [userSubscriptionPDA] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("user"),
         subscriber.toBuffer(),
-        creator.toBuffer(),
+        MI_WALLET_CREADOR.toBuffer(),
         subscriptionIndexBN.toArrayLike(Buffer, "le", 8)
       ],
       PROGRAM_ID
     );
 
-    console.log("User Subscription PDA:", userSubscriptionPDA.toBase58());
+    const accountInfo = await connection.getAccountInfo(userSubscriptionPDA);
+    let instruction;
+    let message = "";
 
-    // 4. Construir Instrucción del Contrato
-    const instruction = await program.methods
-      .subscribe(new BN(tier), subscriptionIndexBN)
-      .accounts({
-        creatorConfig: creatorConfigPDA,
-        userSubscription: userSubscriptionPDA,
-        subscriber: subscriber,
-        creator: creator,
-        referrer: referrer,
-        systemProgram: SystemProgram.programId,
-      })
-      .instruction();
+    if (!accountInfo) {
+      instruction = await program.methods
+        .subscribe(tier, subscriptionIndexBN)
+        .accounts({
+          creatorConfig: creatorConfigPDA,
+          userSubscription: userSubscriptionPDA,
+          subscriber: subscriber,
+          creator: MI_WALLET_CREADOR,
+          referrer: referrer,
+          systemProgram: SystemProgram.programId,
+        })
+        .instruction();
+      message = `Activando suscripción Tier ${tier}...`;
+    } else {
+      const currentState: any = await program.account.userSubscription.fetch(userSubscriptionPDA);
 
-    const transaction = new Transaction();
-    
-    transaction.add(instruction);
+      if (currentState.tier >= tier) {
+        return Response.json({ 
+          error: `Ya posees el Tier ${currentState.tier} o uno superior.` 
+        }, { status: 400, headers: SHARED_HEADERS });
+      }
+
+      instruction = await program.methods
+        .upgradeTier(tier, subscriptionIndexBN)
+        .accounts({
+          creatorConfig: creatorConfigPDA,
+          userSubscription: userSubscriptionPDA,
+          subscriber: subscriber,
+          creator: MI_WALLET_CREADOR,
+          systemProgram: SystemProgram.programId,
+        })
+        .instruction();
+      message = `Mejorando nivel al Tier ${tier}...`;
+    }
+
+    const transaction = new Transaction().add(instruction);
     transaction.feePayer = subscriber;
     transaction.recentBlockhash = (await connection.getLatestBlockhash("confirmed")).blockhash;
 
@@ -145,16 +153,16 @@ export const POST = async (req: Request) => {
       fields: {
         type: "transaction",
         transaction,
-        message: `Suscripción al Tier ${tier} en proceso...`,
+        message: message,
       },
     });
 
     return Response.json(payload, { headers: SHARED_HEADERS });
 
   } catch (err: any) {
-    console.error("Error en SolanaTiers Blink:", err);
+    console.error(err);
     return Response.json({ 
-      error: "Error al interactuar con el contrato. ¿Está inicializado el creador?" 
+      error: "Error al procesar la transacción." 
     }, { 
       status: 400, 
       headers: SHARED_HEADERS 
