@@ -28,51 +28,33 @@ const SHARED_HEADERS = {
 };
 
 export const GET = async (req: Request) => {
-  if (!req.headers.get("x-action-version")) {
-    return new Response(
-      `<!DOCTYPE html>
-      <html lang="es">
-        <head>
-          <meta charset="UTF-8">
-          <title>SolanaTiers Protocol</title>
-          <meta property="og:type" content="website">
-          <meta property="og:title" content="SolanaTiers Protocol">
-          <meta property="og:description" content="Suscripciones descentralizadas con sistema de referidos en Solana.">
-          <meta property="og:image" content="${LOGO_URL}">
-          <meta name="twitter:card" content="summary_large_image">
-          <meta name="twitter:image" content="${LOGO_URL}">
-        </head>
-        <body style="background:#000; color:#fff; display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif;">
-          Redirigiendo a SolanaTiers...
-        </body>
-      </html>`,
-      { headers: { "Content-Type": "text/html" } }
-    );
+  try {
+    const payload: ActionGetResponse = {
+      type: "action",
+      icon: LOGO_URL,
+      title: "SolanaTiers Protocol",
+      description: "Suscríbete para apoyar al creador. Si ya eres miembro, puedes mejorar tu nivel pagando solo la diferencia.",
+      label: "Suscribirse",
+      links: {
+        actions: [
+          {
+            type: "transaction",
+            label: "Tier 1 (Plata)",
+            href: `/api/actions/subscribe?tier=1&index=0&ref=${MI_WALLET_REFERIDO.toBase58()}`,
+          },
+          {
+            type: "transaction",
+            label: "Tier 2 (Oro)",
+            href: `/api/actions/subscribe?tier=2&index=0&ref=${MI_WALLET_REFERIDO.toBase58()}`,
+          }
+        ]
+      }
+    };
+
+    return Response.json(payload, { headers: SHARED_HEADERS });
+  } catch (err) {
+    return Response.json({ error: "Error loading action" }, { status: 500, headers: SHARED_HEADERS });
   }
-
-  const payload: ActionGetResponse = {
-    type: "action",
-    icon: LOGO_URL,
-    title: "SolanaTiers Protocol",
-    description: "Suscríbete para apoyar al creador. Si ya eres miembro, puedes mejorar tu nivel pagando solo la diferencia.",
-    label: "Suscribirse",
-    links: {
-      actions: [
-        {
-          type: "transaction",
-          label: "Tier 1 (Plata)",
-          href: `/api/actions/subscribe?tier=1&index=0&ref=${MI_WALLET_REFERIDO}`,
-        },
-        {
-          type: "transaction",
-          label: "Tier 2 (Oro)",
-          href: `/api/actions/subscribe?tier=2&index=0&ref=${MI_WALLET_REFERIDO}`,
-        }
-      ]
-    }
-  };
-
-  return Response.json(payload, { headers: SHARED_HEADERS });
 };
 
 export const OPTIONS = GET;
@@ -88,7 +70,8 @@ export const POST = async (req: Request) => {
 
     const tier = parseInt(searchParams.get("tier") || "1");
     const index = parseInt(searchParams.get("index") || "0");
-    const referrer = new PublicKey(searchParams.get("ref") || MI_WALLET_REFERIDO.toBase58());
+    const referrerStr = searchParams.get("ref") || MI_WALLET_REFERIDO.toBase58();
+    const referrer = new PublicKey(referrerStr);
     const subscriptionIndexBN = new BN(index);
 
     const [creatorConfigPDA] = PublicKey.findProgramAddressSync(
@@ -124,8 +107,8 @@ export const POST = async (req: Request) => {
         .instruction();
       message = `Activando suscripción Tier ${tier}...`;
     } else {
-      const currentState: any = await program.account.userSubscription.fetch(userSubscriptionPDA);
-
+      const currentState: any = await (program.account as any ).userSubscription.fetch(userSubscriptionPDA);
+      
       if (currentState.tier >= tier) {
         return Response.json({ 
           error: `Ya posees el Tier ${currentState.tier} o uno superior.` 
@@ -160,7 +143,7 @@ export const POST = async (req: Request) => {
     return Response.json(payload, { headers: SHARED_HEADERS });
 
   } catch (err: any) {
-    console.error(err);
+    console.error("Error en POST:", err);
     return Response.json({ 
       error: "Error al procesar la transacción." 
     }, { 
