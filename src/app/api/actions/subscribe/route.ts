@@ -102,7 +102,7 @@ export const POST = async (req: Request) => {
       PROGRAM_ID
     );
 
-    const accountInfo = await connection.getAccountInfo(userSubscriptionPDA);
+    const accountInfo = await connection.getAccountInfo(userSubscriptionPDA, "processed");
     let instruction;
     let message = "";
 
