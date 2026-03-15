@@ -1,24 +1,18 @@
-import { createActionHeaders, type ActionsJson } from "@solana/actions";
+import { ACTIONS_CORS_HEADERS } from "@solana/actions";
 
 export const GET = async () => {
-
-  const payload: ActionsJson = {
+  const payload = {
     rules: [
       {
         pathPattern: "/*",
-        apiPath: "/api/actions/*",
-      },
-      {
-        pathPattern: "/api/actions/**",
-        apiPath: "/api/actions/**",
-      },
-    ],
+        apiPath: "/api/actions/subscribe"
+      }
+    ]
   };
 
   return Response.json(payload, {
-    headers: createActionHeaders(),
+    headers: ACTIONS_CORS_HEADERS
   });
 };
 
-// necesario para CORS
 export const OPTIONS = GET;
