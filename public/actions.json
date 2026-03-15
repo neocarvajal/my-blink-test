@@ -5,7 +5,7 @@
       "apiPath": "/api/actions/subscribe"
     },
     {
-      "pathPattern": "/**",
+      "pathPattern": "/", 
       "apiPath": "/api/actions/subscribe"
     }
   ]
