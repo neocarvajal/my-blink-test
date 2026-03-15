@@ -1,5 +1,5 @@
 {
-  "address": "Eu6HDSN97Pu7o8SvRt2k6jJuYbDGRh85czL71cW8x8PB",
+  "address": "4NQ9RtQ3EYENFzb8qRN6ya3uYCmABKMNjgYfghBRWP4K",
   "metadata": {
     "name": "solanatiers",
     "version": "0.1.0",
@@ -450,6 +450,11 @@
       "code": 6001,
       "name": "NoActiveSubscription",
       "msg": "No active subscription"
+    },
+    {
+      "code": 6002,
+      "name": "MathOverflow",
+      "msg": "Calculation error: the price difference could not be determined."
     }
   ],
   "types": [
