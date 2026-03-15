@@ -16,7 +16,7 @@ import { Program, Idl, BN } from "@coral-xyz/anchor";
 import idl from "./solanatiers.json";
 
 type Solanatiers = Idl;
-const PROGRAM_ID = new PublicKey("Eu6HDSN97Pu7o8SvRt2k6jJuYbDGRh85czL71cW8x8PB"); 
+const PROGRAM_ID = new PublicKey("4NQ9RtQ3EYENFzb8qRN6ya3uYCmABKMNjgYfghBRWP4K"); 
 const MI_WALLET_CREADOR = new PublicKey("neoYtXTopQCbg2eWJhsT3uTTUJKCvnWwgC3NppJD1cS");
 const MI_WALLET_REFERIDO = new PublicKey("8H8nCS6JUhKNJRHbC2fmr6ofHRLsYCapqVmb5CJJ6VE6");
 const BANNER_URL = "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png"; 
